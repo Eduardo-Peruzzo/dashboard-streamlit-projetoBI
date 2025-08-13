@@ -85,7 +85,7 @@ st.plotly_chart(fig_ranking, use_container_width=True, config={"staticPlot": Tru
 # ---------------- Detalhamento por preço dentro da categoria ----------------
 categoria_selecionada = st.selectbox(
     "Selecione uma categoria para ver os preços",
-    sorted(df_filtrado["Category"].unique())
+    df_filtrado["Category"].unique()
 )
 
 detalhe_df = df_filtrado[df_filtrado["Category"] == categoria_selecionada]
