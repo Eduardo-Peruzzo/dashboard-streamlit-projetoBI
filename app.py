@@ -47,6 +47,64 @@ if mes != "Tudo":
 if dia != "Tudo":
     df_filtrado = df_filtrado[df_filtrado["Date"].dt.day == dia]
 
+# ---------------- INSIGHTS AUTOMÁTICOS ----------------
+st.subheader("📌 Resumo e Sugestões")
+
+if not df_filtrado.empty:
+    # Produto mais vendido (categoria)
+    produto_top = (
+        df_filtrado.groupby("Category")["Total Vendas"]
+        .sum()
+        .reset_index()
+        .sort_values("Total Vendas", ascending=False)
+        .iloc[0]
+    )
+
+    # Produto mais vendido (categoria + preço)
+    df_filtrado_ptop = df_filtrado.loc[df_filtrado["Category"] == produto_top["Category"]]
+    produto_top_preco = (
+        df_filtrado_ptop.groupby(["Category", "Price"])["Total Vendas"]
+        .sum()
+        .reset_index()
+        .sort_values("Total Vendas", ascending=False)
+        .iloc[0]
+    )
+    print(produto_top)
+    print(produto_top_preco)
+
+    # Método de pagamento mais usado
+    metodo_top = df_filtrado[["Qty PIX/Dinheiro", "Qty Crédito", "Qty Débito"]].sum().idxmax()
+    metodo_top = metodo_top.replace("Qty ", "")
+
+    # Variação em relação ao primeiro e último dia do filtro
+    vendas_por_dia = df_filtrado.groupby(df_filtrado["Date"].dt.date)["Total Vendas"].sum().reset_index()
+    if len(vendas_por_dia) > 1:
+        variacao = vendas_por_dia["Total Vendas"].iloc[-1] - vendas_por_dia["Total Vendas"].iloc[0]
+        tendencia = "alta" if variacao > 0 else "queda"
+    else:
+        variacao = 0
+        tendencia = "estável"
+
+    # Sugestão simples
+    sugestoes = []
+    sugestoes.append(f"📈 O produto mais vendido foi **{produto_top['Category']}** com {produto_top['Total Vendas']} vendas.")
+    sugestoes.append(f"💰 Dentro dessa categoria, o preço campeão foi **R$ {produto_top_preco['Price']:.2f}** com {produto_top_preco['Total Vendas']} vendas.")
+    sugestoes.append(f"💳 O método de pagamento mais usado foi **{metodo_top}**.")
+    sugestoes.append(f"📊 As vendas estão em **{tendencia}** desde o início do período filtrado.")
+
+    if tendencia == "alta":
+        sugestoes.append(f"✅ Considere aumentar o estoque de **{produto_top['Category']}**.")
+    elif tendencia == "queda":
+        sugestoes.append("⚠️ Vendas caíram, talvez seja hora de revisar preços ou promoções.")
+    else:
+        sugestoes.append("ℹ️ As vendas estão estáveis, mantenha a estratégia atual.")
+
+    for s in sugestoes:
+        st.write(s)
+
+else:
+    st.write("⚠️ Nenhum dado disponível para os filtros selecionados.")
+
 # ---------------- KPIs ----------------
 total_vendas = df_filtrado["Total Vendas"].sum()
 valor_total = df_filtrado["Valor Total"].sum()
