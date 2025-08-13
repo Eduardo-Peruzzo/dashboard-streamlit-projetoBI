@@ -69,8 +69,6 @@ if not df_filtrado.empty:
         .sort_values("Total Vendas", ascending=False)
         .iloc[0]
     )
-    print(produto_top)
-    print(produto_top_preco)
 
     # Método de pagamento mais usado
     metodo_top = df_filtrado[["Qty PIX/Dinheiro", "Qty Crédito", "Qty Débito"]].sum().idxmax()
